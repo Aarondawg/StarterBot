@@ -1,1 +1,1 @@
-RSScript
+Gets you to level 30 in various skills fresh out of tutorial island. 
