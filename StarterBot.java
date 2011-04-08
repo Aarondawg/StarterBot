@@ -11,6 +11,8 @@ import java.awt.event.MouseMotionListener;
 import org.rsbot.event.listeners.PaintListener;
 import org.rsbot.script.Script;
 import org.rsbot.script.ScriptManifest;
+import org.rsbot.script.methods.Game;
+import org.rsbot.script.methods.Skills;
 import org.rsbot.script.wrappers.RSArea;
 import org.rsbot.script.wrappers.RSTile;
 
@@ -101,10 +103,10 @@ public class StarterBot extends Script implements MouseListener,
 
 	public skillState getSkill() {
 
-		if (skills.getRealLevel(skills.WOODCUTTING) < 30) {
+		if (skills.getRealLevel(Skills.WOODCUTTING) < 30) {
 			return skillState.WC;
 		}
-		if (skills.getRealLevel(skills.FISHING) < 30) {
+		if (skills.getRealLevel(Skills.FISHING) < 30) {
 			return skillState.FISH;
 		}
 		return skillState.FIGHT;
@@ -112,10 +114,10 @@ public class StarterBot extends Script implements MouseListener,
 	}
 
 	public fightState getFightStyle() {
-		if (skills.getRealLevel(skills.ATTACK) < 30) {
+		if (skills.getRealLevel(Skills.ATTACK) < 30) {
 			return fightState.ATTACK;
 		}
-		if (skills.getRealLevel(skills.DEFENSE) < 30) {
+		if (skills.getRealLevel(Skills.DEFENSE) < 30) {
 			return fightState.DEFENSE;
 		}
 		return fightState.STRENGTH;
@@ -145,13 +147,13 @@ public class StarterBot extends Script implements MouseListener,
 
 		startTime = System.currentTimeMillis();
 
-		startWcLvl = skills.getRealLevel(skills.WOODCUTTING);
-		startFishLvl = skills.getRealLevel(skills.FISHING);
-		startDefLvl = skills.getRealLevel(skills.DEFENSE);
-		startStrLvl = skills.getRealLevel(skills.STRENGTH);
-		startAttLvl = skills.getRealLevel(skills.ATTACK);
-		startRangeLvl = skills.getRealLevel(skills.RANGE);
-		startMagicLvl = skills.getRealLevel(skills.MAGIC);
+		startWcLvl = skills.getRealLevel(Skills.WOODCUTTING);
+		startFishLvl = skills.getRealLevel(Skills.FISHING);
+		startDefLvl = skills.getRealLevel(Skills.DEFENSE);
+		startStrLvl = skills.getRealLevel(Skills.STRENGTH);
+		startAttLvl = skills.getRealLevel(Skills.ATTACK);
+		startRangeLvl = skills.getRealLevel(Skills.RANGE);
+		startMagicLvl = skills.getRealLevel(Skills.MAGIC);
 
 		log("Starting script");
 		return true;
@@ -177,25 +179,25 @@ public class StarterBot extends Script implements MouseListener,
 		String s = "Determining...";
 		switch (getSkill()) {
 		case WC:
-			currentLevel = skills.getCurrentLevel(skills.WOODCUTTING);
+			currentLevel = skills.getCurrentLevel(Skills.WOODCUTTING);
 			s = "Woodcutting";
 			break;
 		case FISH:
-			currentLevel = skills.getCurrentLevel(skills.FISHING);
+			currentLevel = skills.getCurrentLevel(Skills.FISHING);
 			s = "Fishing";
 			break;
 		case FIGHT:
 			switch (getFightStyle()) {
 			case ATTACK:
-				currentLevel = skills.getCurrentLevel(skills.ATTACK);
+				currentLevel = skills.getCurrentLevel(Skills.ATTACK);
 				s = "Attack";
 				break;
 			case STRENGTH:
-				currentLevel = skills.getCurrentLevel(skills.STRENGTH);
+				currentLevel = skills.getCurrentLevel(Skills.STRENGTH);
 				s = "Strength";
 				break;
 			case DEFENSE:
-				currentLevel = skills.getCurrentLevel(skills.DEFENSE);
+				currentLevel = skills.getCurrentLevel(Skills.DEFENSE);
 				s = "Defense";
 				break;
 			}
@@ -228,17 +230,17 @@ public class StarterBot extends Script implements MouseListener,
 
 			g.drawString("Training: " + s, 563, 243);// 16
 			g.drawString(
-					"WC LVL: " + skills.getCurrentLevel(skills.WOODCUTTING)
+					"WC LVL: " + skills.getCurrentLevel(Skills.WOODCUTTING)
 							+ "/30", 563, 259);
-			g.drawString("FISH LVL: " + skills.getCurrentLevel(skills.FISHING)
+			g.drawString("FISH LVL: " + skills.getCurrentLevel(Skills.FISHING)
 					+ "/30", 563, 275);
 			g.drawString("Fighting -", 563, 291);
 
-			g.drawString("ATT LVL: " + skills.getCurrentLevel(skills.ATTACK)
+			g.drawString("ATT LVL: " + skills.getCurrentLevel(Skills.ATTACK)
 					+ "/30", 573, 307);
-			g.drawString("STR LVL: " + skills.getCurrentLevel(skills.STRENGTH)
+			g.drawString("STR LVL: " + skills.getCurrentLevel(Skills.STRENGTH)
 					+ "/30", 573, 323);
-			g.drawString("DEF LVL: " + skills.getCurrentLevel(skills.DEFENSE)
+			g.drawString("DEF LVL: " + skills.getCurrentLevel(Skills.DEFENSE)
 					+ "/30", 573, 338);
 
 		}
@@ -254,16 +256,16 @@ public class StarterBot extends Script implements MouseListener,
 		if (game.isWelcomeScreen()) {
 			log("On Welcome Screen, logging in...");
 			sleep(random(2000, 3500));
-			interfaces.getComponent(game.INTERFACE_WELCOME_SCREEN_PLAY)
+			interfaces.getComponent(Game.INTERFACE_WELCOME_SCREEN_PLAY)
 					.doClick();
 			log("Clicked on login... Now waiting...");
 			sleep(random(5000, 7000));
 			return true;
-		} else if (interfaces.getComponent(game.INTERFACE_WELCOME_SCREEN)
+		} else if (interfaces.getComponent(Game.INTERFACE_WELCOME_SCREEN)
 				.isValid()) {
 			log("On Welcome Screen, logging in...");
 			sleep(random(2000, 3500));
-			interfaces.getComponent(game.INTERFACE_WELCOME_SCREEN_PLAY)
+			interfaces.getComponent(Game.INTERFACE_WELCOME_SCREEN_PLAY)
 					.doClick();
 			log("Clicked on login... Now waiting...");
 			sleep(random(5000, 7000));
