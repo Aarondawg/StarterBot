@@ -1,5 +1,4 @@
 import java.awt.AlphaComposite;
-import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Composite;
 import java.awt.Graphics;
@@ -14,6 +13,8 @@ import org.rsbot.script.ScriptManifest;
 import org.rsbot.script.methods.Game;
 import org.rsbot.script.methods.Skills;
 import org.rsbot.script.wrappers.RSArea;
+import org.rsbot.script.wrappers.RSNPC;
+import org.rsbot.script.wrappers.RSObject;
 import org.rsbot.script.wrappers.RSTile;
 
 @ScriptManifest(authors = { "Camaro`", "Bentzilla" }, name = "StarterBot", keywords = "Woodcutting", description = "AIO AIO?", version = 1.337)
@@ -54,14 +55,18 @@ public class StarterBot extends Script implements MouseListener,
 			new RSTile(2998, 3218), new RSTile(2998, 3214),
 			new RSTile(2997, 3207), new RSTile(2996, 3201) };
 
+	public RSTile[] pathToStairs = { new RSTile(3214, 3219),
+			new RSTile(3206, 3228) };
 	public final int[] AXE_IDS = { 1351, 1349, 1353, 1361, 1355, 1357, 1359,
 			4031, 6739, 13470, 14108 };
-	public final int[] PICKAXES = { 1265, 1267, 1269, 1271, 1273, 1275, 15259 };
+	public final int[] PICKAXES = { 1265, 1267, 1269, 1271, 1273, 1275, 15259,
+			303 };// 303 IS SMALL FISHING NET
 
 	public final int[] NEST_IDS = { 5070, 5071, 5072, 5073, 5074, 5075, 5076,
 			7413, 11966 };
-	public int[] trees = { 1276, 1278 };
-	public int[] oaks = { 1281 };
+	public int[] trees = { 1276, 1278, 38788, 38782, 38787, 38783, 38786,
+			38784, 38760 };
+	public int[] oaks = { 1281, 38731, 38732 };
 	public int[] willows = { 5551, 5552, 5553 };
 
 	public long startTime;
@@ -71,13 +76,18 @@ public class StarterBot extends Script implements MouseListener,
 	public int logsCut, oaksCut, willowsCut, bans, loads;
 	public Point mousePoint;
 	public boolean showProggy;
+	public RSTile lumbyTile = new RSTile(3223, 3233);
 
 	public enum skillState {
-		WC, FISH, FIGHT, RELOCATE;
+		WC, FISH, FIGHT, RELOCATE, BANK;
+		// RELOCATE = HEADING FROM LUMBY TO LOCATION
+		// BANK = Banks your useless shit out of tut island.
 	}
 
 	public enum mainState {
-		WORK, DROP, WAIT;//TODO Create a "getMainState()" method, this is going to be quite lengthly :)
+		CHOP, FISH, FIGHT, DROP, WAIT, RELOC;// TODO Create a "getMainState()"
+												// method, this is going to be
+												// quite lengthly :)
 	}
 
 	public enum fightState {
@@ -91,17 +101,65 @@ public class StarterBot extends Script implements MouseListener,
 		return result;
 	}
 
-	private boolean inArea(RSArea area) {
-		if (area == null)
-			return false;
+	public mainState getMainState() {
+		switch (getSkill()) {
+		case WC:
+			if (inventory.isFull()) {
+				return mainState.DROP;
+			}
+			if (calc.distanceTo(new RSTile(2992, 3205)) < 32) {
+				if (getMyPlayer().isIdle()) {
+					return mainState.CHOP;
+				} else {
+					return mainState.WAIT;
+				}
+			} else {
+				return mainState.RELOC;
+			}
+		case FISH:
+			if (inventory.isFull()) {
+				return mainState.DROP;
+			}
+			if (calc.distanceTo(new RSTile(2988, 3178)) < 15) {
+				if (getMyPlayer().isIdle()) {
+					return mainState.FISH;
+				} else {
+					return mainState.WAIT;
+				}
+			} else {
+				return mainState.RELOC;
+			}
+		case FIGHT:
+			if (inventory.isFull()) {
+				return mainState.DROP;
+			}
+			if (calc.distanceTo(new RSTile(3000, 3205)) < 15) {
+				if (getMyPlayer().isIdle()) {
+					return mainState.FIGHT;
+				} else {
+					return mainState.WAIT;
+				}
+			} else {
+				return mainState.RELOC;
+			}
+		}
 
-		if (area.contains(getMyPlayer().getLocation()))
-			return true;
-
-		return false;
+		return mainState.WAIT;
 	}
 
 	public skillState getSkill() {
+		/*
+		 * if (calc.distanceTo(lumbyTile) < 20) { if (inventory.getCount() > 7)
+		 * { return skillState.BANK; } else { return skillState.RELOCATE; } }
+		 * else {
+		 */
+		if (calc.distanceTo(new RSTile(3000, 3205)) > 60) {
+			if (calc.distanceTo(lumbyTile) > 19) {
+				// magic.castSpell(magic.SPELL_HOME_TELEPORT);
+			}
+			return skillState.RELOCATE;
+
+		}
 
 		if (skills.getRealLevel(Skills.WOODCUTTING) < 30) {
 			return skillState.WC;
@@ -306,20 +364,81 @@ public class StarterBot extends Script implements MouseListener,
 		return null;
 	}
 
-	public int wcloop() {
+	public int chop() {
+		int lvl = skills.getCurrentLevel(Skills.WOODCUTTING);
+		log("Chopping...");
+		RSObject tree = null;
+		if (lvl < 15) {
+			tree = objects.getNearest(trees);
+
+		} else {
+			tree = objects.getNearest(oaks);
+			if (tree == null || !tree.isOnScreen()) {
+				tree = objects.getNearest(trees);
+			}
+		}
+		if (tree != null) {
+			if (!tree.isOnScreen()) {
+				camera.turnTo(tree);
+				if (!tree.isOnScreen()) {
+					walking.walkTileMM(tree.getLocation(), 1, 1);
+					tree.doAction("Chop");
+				} else {
+					tree.doAction("Chop");
+				}
+
+			} else {
+				tree.doAction("Chop");
+			}
+		}
 		return random(200, 400);
 	}
 
-	public int fishloop() {
+	public int fish() {
+		// int lvl = skills.getCurrentLevel(Skills.FISHING);
+
+		RSNPC spot = null;
+		spot = npcs.getNearest(325);// Fish spot NPC
+		if (spot != null) {
+			spot.doAction("Net");
+		}
 		return random(200, 400);
 	}
 
-	public int fightloop() {
+	public int fight() {
 		return random(200, 400);
+	}
+
+	public boolean walkPathSafe(RSTile[] path) { // Originally made this for
+													// banking, but your walking
+													// was like weird.
+		if (calc.distanceTo(path[path.length - 1]) > 4) {
+			RSTile n = getNext(path);
+			if (n != null) {
+				walking.walkTileMM(n.randomize(0, 0));
+				if (random(1, 6) != 2) {
+					mouse.moveRandomly(20);
+				}
+				if (walking.getEnergy() < 20) {
+					walking.rest(90);
+				}
+				if (!walking.isRunEnabled()) {
+					walking.setRun(true);
+				}
+				while (getMyPlayer().isMoving()) {
+					sleep(150);
+				}
+				return false;
+			}
+		} else {
+			return true;
+		}
+		return false;
 	}
 
 	@Override
-	public int loop() {
+	public int loop() {// Chopping works, it gets you from 1-15, then starts
+						// searching for oaks. Progress Report works too
 		if (!game.isLoggedIn()) {
 			sleep(1400);
 			logIn();
@@ -327,18 +446,52 @@ public class StarterBot extends Script implements MouseListener,
 		}
 		mousePoint = mouse.getLocation();
 		mouse.setSpeed(random(5, 8));
+		if (getSkill().equals(skillState.BANK)) {// Never is BANK, i commented
+													// it out.
+			if (!bank()) {
+				stopScript(false);
+			}
+		}
+		log("Get Skill = " + getSkill().toString());
+		log("Get Main = " + getMainState().toString());
+		if (getSkill().equals(skillState.RELOCATE)) {
+			while (calc.distanceTo(new RSTile(2996, 3201)) > 10) {
+				walkPathSafe(path);
+			}
+			return random(200, 400);
+		}
 
-		switch (getSkill()) {
-		case WC:
-			return wcloop();
+		switch (getMainState()) {
+		case DROP:
+			drop();
+			return random(200, 400);
+		case CHOP:
+			return chop();
 		case FISH:
-			return fishloop();
+			return fish();
 		case FIGHT:
-			return fightloop();
-
-		case RELOCATE:
-			if (calc.distanceTo(new RSTile(2996, 3201)) > 50) {
-				walkPath(path);
+			return fight();
+		case WAIT:
+			if (random(0, 20) > 17)
+				mouse.move(random(10, 450), random(10, 450));
+			return random(500, 1000);
+		case RELOC:
+			switch (getSkill()) {
+			case WC:
+				while (calc.distanceTo(new RSTile(2996, 3201)) > 10) {
+					walkPath(path);
+				}
+				return random(200, 400);
+			case FISH:
+				while (calc.distanceTo(new RSTile(2996, 3201)) > 10) {
+					walkPath(path);
+				}
+				return random(200, 400);
+			case FIGHT:
+				while (calc.distanceTo(new RSTile(2996, 3201)) > 10) {
+					walkPath(path);
+				}
+				return random(200, 400);
 			}
 		}
 
@@ -404,6 +557,83 @@ public class StarterBot extends Script implements MouseListener,
 	@Override
 	public void mouseReleased(MouseEvent arg0) {
 
+	}
+
+	public boolean bank() { // Not used.. not really needed either.. didnt
+							// really work either.
+		while (inventory.getCount() > 7) {
+			if (walkPathSafe(pathToStairs)) {
+				RSTile stairTile = new RSTile(3204, 3229);
+				while (getMyPlayer().isMoving()) {
+					sleep(150);
+				}
+				sleep(random(500, 1000));
+				if (calc.tileOnScreen(stairTile)) {
+					Point p = calc.tileToScreen(stairTile);
+					mouse.click(p, 5, 5, true);
+					RSNPC duke = npcs.getNearest(741);
+					int fs = 0;
+					while (duke == null) {
+						sleep(random(30, 80));
+						duke = npcs.getNearest(741);
+						fs++;
+						if (fs > 75)
+							break;
+					}
+					sleep(random(500, 1000));
+					Point pp = calc.tileToScreen(stairTile);
+					mouse.click(pp, 5, 5, false);
+					menu.doAction("Up");
+					RSNPC banker = npcs.getNearest(494);
+					fs = 0;
+					while (banker == null) {
+						sleep(random(30, 80));
+						banker = npcs.getNearest(494);
+						fs++;
+						if (banker != null)
+							break;
+						if (fs > 75)
+							break;
+					}
+					sleep(random(500, 1000));
+					// walking.walkTileMM(new
+					// RSTile(banker.getLocation().getX(),
+					// banker.getLocation().getY() - 2), 0, 0);
+
+					RSObject bz = objects.getNearest(36786);
+					if (bz != null) {
+						if (bz.isOnScreen()) {
+							bz.doAction("uick");
+							while (getMyPlayer().isMoving()) {
+								sleep(150);
+							}
+						} else {
+							walking.walkTileMM(bz.getLocation(), 0, 0);
+							while (getMyPlayer().isMoving()) {
+								sleep(150);
+							}
+							sleep(random(500, 1000));
+							RSObject bsz = objects.getNearest(36786);
+							if (bsz != null) {
+								bsz.doAction("uick");
+								while (getMyPlayer().isMoving()) {
+									sleep(150);
+								}
+							}
+						}
+					}
+					if (!bank.isOpen()) {
+						return false;
+					} else {
+						while (inventory.getCountExcept(false,
+								merge(PICKAXES, AXE_IDS)) > 0)
+							bank.depositAllExcept(merge(PICKAXES, AXE_IDS));
+					}
+				}
+			}
+
+		}
+		return false;
 	}
 
 }
