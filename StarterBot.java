@@ -76,6 +76,7 @@ public class StarterBot extends Script implements MouseListener,
 	public int logsCut, oaksCut, willowsCut, bans, loads;
 	public Point mousePoint;
 	public boolean showProggy, pickedSling, stopSling;
+	public boolean firstTime = true;
 	public RSTile lumbyTile = new RSTile(3223, 3233);
 
 	public enum skillState {
@@ -161,20 +162,30 @@ public class StarterBot extends Script implements MouseListener,
 		return mainState.WAIT;
 	}
 
-	public skillState getSkill() {
-
+	public boolean weFar(){
 		if (calc.distanceTo(new RSTile(3000, 3205)) > 60) {
 			if (calc.distanceTo(lumbyTile) > 19) {
 				magic.castSpell(Magic.SPELL_HOME_TELEPORT);
+				sleep(3000);
 			}
-			return skillState.RELOCATE;
+			return true;
 
+		}
+		return false;
+	}
+	
+	public skillState getSkill() {
+		//Temp test
+		if (firstTime){
+			
+			firstTime = false;
+			return skillState.RELOCATE;
 		}
 
 		if (skills.getRealLevel(Skills.WOODCUTTING) < 30) {
 			return skillState.WC;
 		}
-		if (skills.getRealLevel(Skills.FISHING) < 5) {
+		if (skills.getRealLevel(Skills.FISHING) < 30) {
 			return skillState.FISH;
 		}
 		return skillState.FIGHT;
@@ -199,7 +210,21 @@ public class StarterBot extends Script implements MouseListener,
 	}
 
 	public void drop() {
-		inventory.dropAllExcept(equipment);
+		switch(getSkill()){
+			case FIGHT:	
+				for (int i = 0; i < 29; ++i) {
+					if (inventory.getItemAt(i).getID() == 526){ // <-- Should be the bone ID
+						inventory.selectItem(i);
+						inventory.clickSelectedItem();
+						sleep(random(500, 900));
+					}
+				}
+			case WC:
+				//BURN ?
+			case FISH:
+			    // Bank/cook
+		}
+		inventory.dropAllExcept(equipment); // to bot like ?
 	}
 
 	public long TimeFromMark(long T) {
@@ -311,24 +336,24 @@ public class StarterBot extends Script implements MouseListener,
 					"WC LVL: " + skills.getCurrentLevel(Skills.WOODCUTTING)
 							+ "/30" + " | "
 							+ skills.getExpToNextLevel(Skills.WOODCUTTING)
-							+ " XP / Lvl", 563, 259);
+							+ " XP until Lvl", 563, 259);
 			g.drawString("FISH LVL: " + skills.getCurrentLevel(Skills.FISHING)
 					+ "/30" + " | " + skills.getExpToNextLevel(Skills.FISHING)
-					+ " XP / Lvl", 563, 275);
+					+ " XP until Lvl", 563, 275);
 			g.drawString("Fighting -", 563, 291);
 
 			g.drawString("ATT LVL: " + skills.getCurrentLevel(Skills.ATTACK)
 					+ "/30" + " | " + skills.getExpToNextLevel(Skills.ATTACK)
-					+ " XP / Lvl", 573, 307);
+					+ " XP until Lvl", 573, 307);
 			g.drawString("STR LVL: " + skills.getCurrentLevel(Skills.STRENGTH)
 					+ "/30" + " | " + skills.getExpToNextLevel(Skills.STRENGTH)
-					+ " XP / Lvl", 573, 323);
+					+ " XP until Lvl", 573, 323);
 			g.drawString("DEF LVL: " + skills.getCurrentLevel(Skills.DEFENSE)
 					+ "/30" + " | " + skills.getExpToNextLevel(Skills.DEFENSE)
-					+ " XP / Lvl", 573, 338);
+					+ " XP until Lvl", 573, 338);
 			g.drawString("RNG LVL: " + skills.getCurrentLevel(Skills.RANGE)
 					+ "/30" + " | " + skills.getExpToNextLevel(Skills.RANGE)
-					+ " XP / Lvl", 573, 354);
+					+ " XP until Lvl", 573, 354);
 
 		}
 
@@ -495,6 +520,15 @@ public class StarterBot extends Script implements MouseListener,
 				}
 			}
 		}
+		g = groundItems.getNearest(526);
+		if (g != null) {
+			if (g.isOnScreen()) {
+				g.doAction("Take");
+				while (getMyPlayer().isMoving()) {
+					sleep(50);
+				}
+			}
+		}
 		combat.setAutoRetaliate(true);
 		if (getMyPlayer().getHPPercent() < 35) {
 			return random(200, 400);
@@ -533,9 +567,9 @@ public class StarterBot extends Script implements MouseListener,
 		}
 		mousePoint = mouse.getLocation();
 		mouse.setSpeed(random(5, 8));
-
-		log("Get Skill = " + getSkill().toString());
-		log("Get Main = " + getMainState().toString());
+		// TO MUCH SPAM
+		//log("Get Skill = " + getSkill().toString());
+		//log("Get Main = " + getMainState().toString());
 		if (getSkill().equals(skillState.RELOCATE)) {
 			while (calc.distanceTo(new RSTile(2996, 3201)) > 10) {
 				sleep(10);
@@ -606,7 +640,7 @@ public class StarterBot extends Script implements MouseListener,
 			}
 		}
 
-		return random(250, 400);
+		return random(650, 900);
 	}
 
 	// Leave all this mouse stuff, its for the progress report.
