@@ -212,19 +212,18 @@ public class StarterBot extends Script implements MouseListener,
 	public void drop() {
 		switch(getSkill()){
 			case FIGHT:	
-				for (int i = 0; i < 29; ++i) {
-					if (inventory.getItemAt(i).getID() == 526){ // <-- Should be the bone ID
-						inventory.selectItem(i);
-						inventory.clickSelectedItem();
-						sleep(random(500, 900));
-					}
-				}
+                while(inventory.getCount(526) > 0) {
+                	inventory.getItem(526).doAction("bury");
+                	while (!(getMyPlayer().getAnimation() == -1)){
+                		sleep(random(250, 500));
+                	}
+                }
 			case WC:
 				//BURN ?
 			case FISH:
 			    // Bank/cook
 		}
-		inventory.dropAllExcept(equipment); // to bot like ?
+		inventory.dropAllExcept(equipment); // too bot like ?
 	}
 
 	public long TimeFromMark(long T) {
@@ -503,6 +502,7 @@ public class StarterBot extends Script implements MouseListener,
 		if (g != null && !pickedSling) {
 			if (g.isOnScreen()) {
 				g.doAction("Take");
+				sleep(random(500, 950));
 				while (getMyPlayer().isMoving()) {
 					sleep(50);
 				}
@@ -513,6 +513,7 @@ public class StarterBot extends Script implements MouseListener,
 				RSGroundItem gg = groundItems.getNearest(19830);
 				if (gg != null) {
 					g.doAction("Take");
+					sleep(random(500, 950));
 					while (getMyPlayer().isMoving()) {
 						sleep(50);
 					}
@@ -524,6 +525,7 @@ public class StarterBot extends Script implements MouseListener,
 		if (g != null) {
 			if (g.isOnScreen()) {
 				g.doAction("Take");
+				sleep(random(500, 950));
 				while (getMyPlayer().isMoving()) {
 					sleep(50);
 				}
